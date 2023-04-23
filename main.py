@@ -3,7 +3,7 @@ from pygame.math import Vector2
 import random
 
 
-CELL_SIZE = 20
+CELL_SIZE = 40
 CELL_NUMS = 20
 SIZE = WIDTH, HEIGHT = [CELL_NUMS * CELL_SIZE] * 2
 UP = Vector2(0, -1)
@@ -21,6 +21,7 @@ pygame.display.set_caption("haha")
 class Food:
     def __init__(self):
         self.reset()
+        self.image = pygame.image.load("./assets/images/apple.png").convert_alpha()
 
     def reset(self):
         self.x = random.randint(0, CELL_NUMS - 1)
@@ -28,8 +29,8 @@ class Food:
         self.pos = Vector2(self.x, self.y)
 
     def draw(self):
-        pygame.draw.rect(screen, "orange",
-                         pygame.Rect(self.pos.x * CELL_SIZE, self.pos.y * CELL_SIZE, CELL_SIZE, CELL_SIZE))
+        self.rect = self.image.get_rect(topleft=(self.pos.x * CELL_SIZE, self.pos.y * CELL_SIZE))
+        screen.blit(self.image, self.rect)
 
 
 class Snake:
@@ -38,10 +39,71 @@ class Snake:
         self.direction = Vector2(1, 0)  # Vector2(0, 0) 表示不移动，本质是蛇在不断reset
         self.eat = False
 
+        self.head_up = pygame.image.load('assets/images/head_up.png').convert_alpha()
+        self.head_down = pygame.image.load('assets/images/head_down.png').convert_alpha()
+        self.head_right = pygame.image.load('assets/images/head_right.png').convert_alpha()
+        self.head_left = pygame.image.load('assets/images/head_left.png').convert_alpha()
+
+        self.tail_up = pygame.image.load('assets/images/tail_up.png').convert_alpha()
+        self.tail_down = pygame.image.load('assets/images/tail_down.png').convert_alpha()
+        self.tail_right = pygame.image.load('assets/images/tail_right.png').convert_alpha()
+        self.tail_left = pygame.image.load('assets/images/tail_left.png').convert_alpha()
+
+        self.body_vertical = pygame.image.load('assets/images/body_vertical.png').convert_alpha()
+        self.body_horizontal = pygame.image.load('assets/images/body_horizontal.png').convert_alpha()
+
+        self.body_lt = pygame.image.load('assets/images/body_lt.png').convert_alpha()
+        self.body_lb = pygame.image.load('assets/images/body_lb.png').convert_alpha()
+        self.body_rt = pygame.image.load('assets/images/body_rt.png').convert_alpha()
+        self.body_rb = pygame.image.load('assets/images/body_rb.png').convert_alpha()
+
+    def update_head(self):
+        head_direction = self.body[0] - self.body[1]
+        if head_direction == LEFT:
+            self.head = self.head_left
+        elif head_direction == RIGHT:
+            self.head = self.head_right
+        elif head_direction == UP:
+            self.head = self.head_up
+        else:
+            self.head = self.head_down
+
+    def update_tail(self):
+        tail_direction = self.body[-1] - self.body[-2]
+        if tail_direction == LEFT:
+            self.tail = self.tail_left
+        elif tail_direction == RIGHT:
+            self.tail = self.tail_right
+        elif tail_direction == UP:
+            self.tail = self.tail_up
+        else:
+            self.tail = self.tail_down
+
     def draw(self):
-        for block in self.body:
-            pygame.draw.rect(screen, "green",
-                             pygame.Rect(block.x * CELL_SIZE, block.y * CELL_SIZE, CELL_SIZE, CELL_SIZE))
+        self.update_head()
+        self.update_tail()
+
+        for index, block in enumerate(self.body):
+            rect = pygame.Rect(block.x * CELL_SIZE, block.y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+            if index == 0:
+                screen.blit(self.head, rect)
+            elif index == len(self.body) - 1:
+                screen.blit(self.tail, rect)
+            else:
+                prev_block = self.body[index - 1]
+                next_block = self.body[index + 1]
+
+                if prev_block.y == next_block.y:
+                    screen.blit(self.body_horizontal, rect)
+                elif prev_block.x == next_block.x:
+                    screen.blit(self.body_vertical, rect)
+                else:
+                    prev_direction = prev_block - block
+                    next_direction = next_block - block
+                    if prev_direction.y == -1 and next_direction.x == -1 or prev_direction.x == -1 and next_direction.y == -1:
+                        screen.blit(self.body_rb, rect)
+                    elif prev_direction.x == -1 and next_direction.y == 1 or prev_direction.y == 1 and next_direction.x == -1:
+                        screen.blit(self.body_rt, rect)
 
     def move(self):
         if not self.eat:
@@ -92,6 +154,7 @@ class Game:
 
     def check_eat(self):
         if self.food.pos == self.snake.body[0]:
+            print("1")
             self.snake.eat = True
             self.food.reset()
 
