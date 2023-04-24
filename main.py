@@ -99,11 +99,15 @@ class Snake:
                     screen.blit(self.body_vertical, rect)
                 else:
                     prev_direction = prev_block - block
-                    next_direction = next_block - block
-                    if prev_direction.y == -1 and next_direction.x == -1 or prev_direction.x == -1 and next_direction.y == -1:
+                    next_direction = block - next_block
+                    if prev_direction.x == -1 and next_direction.y == 1 or prev_direction.y == -1 and next_direction.x == 1:
                         screen.blit(self.body_rb, rect)
-                    elif prev_direction.x == -1 and next_direction.y == 1 or prev_direction.y == 1 and next_direction.x == -1:
+                    elif prev_direction.y == 1 and next_direction.x == 1 or prev_direction.x == -1 and next_direction.y == -1:
                         screen.blit(self.body_rt, rect)
+                    elif prev_direction.y == -1 and next_direction.x == -1 or prev_direction.x == 1 and next_direction.y == 1:
+                        screen.blit(self.body_lb, rect)
+                    elif prev_direction.x == 1 and next_direction.y == -1 or prev_direction.y == 1 and next_direction.x == -1:
+                        screen.blit(self.body_lt, rect)
 
     def move(self):
         if not self.eat:
@@ -147,10 +151,15 @@ class Game:
         elif press_keys[pygame.K_RIGHT] and self.snake.direction != LEFT:
             self.snake.direction = Vector2(1, 0)
 
-    def draw_glass(self):
+    def draw_grass(self):
+        # todo: feat bg
         for i in range(CELL_NUMS):
             pygame.draw.line(screen, "black", (0, i * CELL_SIZE), (WIDTH, i * CELL_SIZE), 1)
             pygame.draw.line(screen, "black", (i * CELL_SIZE, 0), (i * CELL_SIZE, HEIGHT), 1)
+
+    def draw_score(self):
+        # todo: score
+        pass
 
     def check_eat(self):
         if self.food.pos == self.snake.body[0]:
@@ -158,13 +167,14 @@ class Game:
             self.snake.eat = True
             self.food.reset()
 
-    def check_collision(self):
+    def check_hit_wall(self):
         # 检测是否撞墙
         if self.snake.body[0].x >= CELL_NUMS or self.snake.body[0].x < 0:
             self.snake.reset()
         if self.snake.body[0].y >= CELL_NUMS or self.snake.body[0].y < 0:
             self.snake.reset()
 
+    def check_overlap(self):
         # 检测和自己重叠
         for block in self.snake.body[1:]:
             if self.snake.body[0] == block:
@@ -189,7 +199,8 @@ while True:
     # 控制蛇运动的方向
     game.handle_snake_direction()
     game.check_eat()
-    game.check_collision()
+    game.check_hit_wall()
+    game.check_overlap()    # check it or not depend on yourself
 
     screen.fill("white")
     game.draw_glass()
